@@ -13,6 +13,6 @@ module F (_: sig end) =
 struct
 
 end
-(* [%%functor include F] *) (* TODO: add back *)
+[%%functor include F]
 
 let y = x
