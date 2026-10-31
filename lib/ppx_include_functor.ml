@@ -3,16 +3,23 @@ open Ast_builder.Default
 
 
 class include_functor_impl = object (self)
-  inherit Ast_traverse.map as super
+  inherit Ast_traverse.map_with_path as super
 
   val mutable fresh_name_count = 0
 
-  method private fresh_name =
-    let name = "Include_functor_" ^ string_of_int fresh_name_count in
+  method private fresh_name path =
+    let path = String.map (function
+        | 'A'..'Z'
+        | 'a'..'z' as c -> c
+        | _ -> '_'
+      ) path
+      |> String.capitalize_ascii
+    in
+    let name = "Include_functor_" ^ path ^ "_" ^ string_of_int fresh_name_count in
     fresh_name_count <- fresh_name_count + 1;
     name
 
-  method! structure str =
+  method! structure path str =
     List.fold_left (fun acc stri ->
         match stri with
         | [%stri [%%functor include [%m? me]]] ->
@@ -23,7 +30,7 @@ class include_functor_impl = object (self)
               | _ -> false
             ) acc
           in
-          let name = self#fresh_name in
+          let name = self#fresh_name path in
           let m = pmod_ident ~loc (Located.lident ~loc name) in
           (* TODO: use extended open to hide M from outside? *)
           let def = pstr_module ~loc {
@@ -40,12 +47,12 @@ class include_functor_impl = object (self)
           ]
           |> List.rev_append acc_opens (* keep opens outside *)
           |> List.rev
-        | _ -> super#structure_item stri :: acc (* TODO: should use self? *)
+        | _ -> super#structure_item path stri :: acc (* TODO: should use self? *)
       ) [] str
     |> List.rev
 end
 
-let impl = (new include_functor_impl)#structure
+let impl str = (new include_functor_impl)#structure !Ocaml_common.Location.input_name str
 
 let () =
   Driver.register_transformation ~impl "include_functor"
