@@ -1,11 +1,4 @@
-(* TEST
-  native;
-*)
-
-(* This duplicates some of the tests from `include_functor.ml` (using just
-   asserts to check the results).  It exists to test `transl_store_structure`
-   in `translmod.ml`, which is a part of the typedtree -> lambda code pass
-   only exercised by native compilation *)
+(* From https://github.com/OlivierNicole/ocaml/blob/011df8e6202161dbdbea4d4efaac4eb082177dd7/testsuite/tests/typing-modules/include_functor_native.ml. *)
 
 (* Test 1: Basic usage in structs *)
 module type S = sig
