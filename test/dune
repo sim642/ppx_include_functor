@@ -1,8 +1,8 @@
 (tests
  (names
-  test_ppx_include_functor
-  test_ppx_include_functor0
-  test_ppx_include_functor2)
+  test_ocaml_pr
+  test_ocaml_pr_native
+  test_open)
  (preprocess (pps ppx_include_functor)))
 
 (env
