@@ -1,0 +1,3 @@
+(library
+ (public_name ppx_include_functor)
+ (name ppx_include_functor))
