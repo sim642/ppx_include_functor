@@ -2,6 +2,7 @@
  (names
   test_ocaml_pr
   test_ocaml_pr_native
+  test_fresh
   test_open)
  (preprocess (pps ppx_include_functor)))
 
