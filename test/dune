@@ -3,7 +3,8 @@
   test_ocaml_pr
   test_ocaml_pr_native
   test_fresh
-  test_open)
+  test_open
+  test_open_order)
  (preprocess (pps ppx_include_functor)))
 
 (env
