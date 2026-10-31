@@ -54,7 +54,7 @@ class include_functor_impl = object (* (self) *)
   inherit Ast_traverse.map_with_path as super
 
   method! structure path str =
-    List.fold_left (fun (acc, acc_forward) stri ->
+    List.fold_left (fun (acc_final, acc, acc_forward) stri ->
         match stri with
         | [%stri [%%functor include [%m? me]]] ->
           let loc = stri.pstr_loc in
@@ -82,7 +82,7 @@ class include_functor_impl = object (* (self) *)
             |> List.rev
           in
           (* let acc' = outer_with_opens in *)
-          let forward =
+          let forwardd =
             acc_forward
             |> List.rev_map (fun (name, (_, stri_forward)) ->
                 match stri_forward with
@@ -95,19 +95,24 @@ class include_functor_impl = object (* (self) *)
               )
             |> List.concat
             |> pmod_structure ~loc in
-          let acc' = List.rev_append [%str
-              include [%m me] ([%m forward])
-            ] outer_with_opens
+          let stri' = [%stri
+              include [%m me] ([%m forwardd])
+            ]
           in
-          let acc_forward' = acc_forward in
-          (acc', acc_forward')
+          let acc' = stri' :: acc in
+          let name = fresh_name () in
+          let acc_forward' = (name, forward stri') :: acc_forward in
+          let acc_final' = stri' :: outer_with_opens in
+          (acc_final', acc', acc_forward')
         | _ ->
-          let acc' = super#structure_item path stri :: acc (* TODO: should use self? *) in
+          let stri' = super#structure_item path stri in (* TODO: should use self? *)
+          let acc' = stri' :: acc in
           let name = fresh_name () in
           let acc_forward' = (name, forward stri) :: acc_forward in
-          (acc', acc_forward')
-      ) ([], []) str
-    |> fst
+          let acc_final' = stri' :: acc_final in
+          (acc_final', acc', acc_forward')
+      ) ([], [], []) str
+    |> fun (x, _, _) -> x
     |> List.rev
 end
 
