@@ -1,26 +1,14 @@
 (lang dune 3.0)
-
 (name ppx_include_functor)
-
 (generate_opam_files true)
-
-(source
- (github username/reponame))
-
-(authors "Author Name <author@example.com>")
-
-(maintainers "Maintainer Name <maintainer@example.com>")
-
-(license LICENSE)
-
-(documentation https://url/to/documentation)
+(source (github sim642/ppx_include_functor))
+(authors "Simmo Saan <simmo.saan@gmail.com>")
+(maintainers "Simmo Saan <simmo.saan@gmail.com>")
+(license MIT)
 
 (package
  (name ppx_include_functor)
- (synopsis "A short synopsis")
- (description "A longer description")
- (depends ppxlib)
- (tags
-  ("add topics" "to describe" your project)))
-
-; See the complete stanza docs at https://dune.readthedocs.io/en/stable/reference/dune-project/index.html
+ (synopsis "include functor as PPX")
+ (description "Transformation for include functor in standard OCaml. Attempts to imitate OxCaml include functor.")
+ (depends
+  ppxlib))
