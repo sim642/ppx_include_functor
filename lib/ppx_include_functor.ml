@@ -38,7 +38,7 @@ class include_functor_impl = object (self)
             include [%m m]
             include [%m me] ([%m m])
           ]
-          |> List.append acc_opens (* keep opens outside *)
+          |> List.rev_append acc_opens (* keep opens outside *)
           |> List.rev
         | _ -> super#structure_item stri :: acc (* TODO: should use self? *)
       ) [] str
