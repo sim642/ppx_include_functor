@@ -1,3 +1,6 @@
 (library
+ (name ppx_include_functor)
  (public_name ppx_include_functor)
- (name ppx_include_functor))
+ (kind ppx_rewriter)
+ (libraries ppxlib)
+ (preprocess (pps ppxlib.metaquot)))

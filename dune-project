@@ -19,7 +19,7 @@
  (name ppx_include_functor)
  (synopsis "A short synopsis")
  (description "A longer description")
- (depends ocaml)
+ (depends ppxlib)
  (tags
   ("add topics" "to describe" your project)))
 
