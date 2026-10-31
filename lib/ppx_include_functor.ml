@@ -17,12 +17,18 @@ class include_functor_impl = object (self)
         match stri with
         | [%stri [%%functor include [%m? me]]] ->
           let loc = stri.pstr_loc in
+          (* TODO: this probably screws up intermixing of opens with other things *)
+          let acc_opens, acc_non_opens = List.partition (function
+              | [%stri open [%m? _]] -> true
+              | _ -> false
+            ) acc
+          in
           let name = self#fresh_name in
           let m = pmod_ident ~loc (Located.lident ~loc name) in
           (* TODO: use extended open to hide M from outside? *)
           let def = pstr_module ~loc {
             pmb_name = Located.mk ~loc (Some name);
-            pmb_expr = pmod_structure ~loc (List.rev acc);
+            pmb_expr = pmod_structure ~loc (List.rev acc_non_opens);
             pmb_attributes = [];
             pmb_loc = loc}
           in
@@ -32,6 +38,7 @@ class include_functor_impl = object (self)
             include [%m m]
             include [%m me] ([%m m])
           ]
+          |> List.append acc_opens (* keep opens outside *)
           |> List.rev
         | _ -> super#structure_item stri :: acc (* TODO: should use self? *)
       ) [] str

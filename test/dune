@@ -1,5 +1,5 @@
-(test
- (name test_ppx_include_functor)
+(tests
+ (names test_ppx_include_functor test_ppx_include_functor2)
  (preprocess (pps ppx_include_functor)))
 
 (env
