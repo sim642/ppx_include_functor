@@ -49,25 +49,32 @@ let forward stri =
   | _ -> [pstr_extension ~loc (Location.error_extensionf ~loc "include_functor: unsupported structure item") []]
     |> dup
 
+type acc = {
+  forwarded: structure;
+  unforwarded: structure;
+  forwards: structure;
+}
 
 class include_functor_impl = object (* (self) *)
   inherit Ast_traverse.map_with_path as super
 
   method! structure path str =
-    List.fold_left (fun (acc_final, acc, acc_forward) stri ->
+    List.fold_left (fun (acc: acc) stri ->
         match stri with
         | [%stri [%%functor include [%m? me]]] ->
           let loc = stri.pstr_loc in
-          let outer_with_opens =
-            List.rev_map2 (fun stri (name, (stri_forward, _)) ->
-                stri ::
-                match stri_forward with
-                | [] -> []
-                | _ ->
-                  [
+          let (forwarded', forwards') =
+            List.fold_left (fun (forwarded, forwards) stri ->
+                match forward stri with
+                | [], [] -> (stri :: forwarded, forwards)
+                | _, []
+                | [], _ -> assert false
+                | forward1, forward2 ->
+                  let name = fresh_name () in
+                  let forward_open =
                     let def = pstr_module ~loc {
                       pmb_name = Located.mk ~loc (Some name);
-                      pmb_expr = pmod_structure ~loc stri_forward;
+                      pmb_expr = pmod_structure ~loc forward1;
                       pmb_attributes = [];
                       pmb_loc = loc}
                     in
@@ -76,44 +83,30 @@ class include_functor_impl = object (* (self) *)
                         [%%i def]
                       end
                     ]
-                  ]
-              ) acc acc_forward
-            |> List.concat
-            |> List.rev
+                  in
+                  let forwarded' = forward_open :: stri :: forwarded in
+                  let forward_include =
+                    let m = pmod_ident ~loc (Located.lident ~loc name) in
+                    [%stri open [%m m]] :: forward2
+                    (* TODO: is this right and safer? *)
+                    |> fun str -> [%stri include [%m pmod_structure ~loc str]]
+                  in
+                  let forwards' = forward_include :: forwards in
+                  (forwarded', forwards')
+              ) (acc.forwarded, acc.forwards) (List.rev acc.unforwarded)
           in
-          (* let acc' = outer_with_opens in *)
-          let forwardd =
-            acc_forward
-            |> List.rev_map (fun (name, (_, stri_forward)) ->
-                match stri_forward with
-                | [] -> []
-                | _ ->
-                  let m = pmod_ident ~loc (Located.lident ~loc name) in
-                  [%stri open [%m m]] :: stri_forward
-                  (* TODO: is this right and safer? *)
-                  |> fun str -> [%str include [%m pmod_structure ~loc str]]
-              )
-            |> List.concat
-            |> pmod_structure ~loc in
-          let stri' = [%stri
-              include [%m me] ([%m forwardd])
+          let stri' =
+            [%stri
+              include [%m me] ([%m pmod_structure ~loc (List.rev forwards')])
             ]
           in
-          let acc' = stri' :: acc in
-          let name = fresh_name () in
-          let acc_forward' = (name, forward stri') :: acc_forward in
-          let acc_final' = stri' :: outer_with_opens in
-          (acc_final', acc', acc_forward')
+          let unforwarded' = [stri'] in
+          {forwarded = forwarded'; unforwarded = unforwarded'; forwards = forwards'}
         | _ ->
           let stri' = super#structure_item path stri in (* TODO: should use self? *)
-          let acc' = stri' :: acc in
-          let name = fresh_name () in
-          let acc_forward' = (name, forward stri) :: acc_forward in
-          let acc_final' = stri' :: acc_final in
-          (acc_final', acc', acc_forward')
-      ) ([], [], []) str
-    |> fun (x, _, _) -> x
-    |> List.rev
+          {acc with unforwarded = stri' :: acc.unforwarded}
+      ) {forwarded = []; unforwarded = []; forwards = []} str
+    |> fun {forwarded; unforwarded; _} -> List.rev_append forwarded (List.rev unforwarded)
 end
 
 let impl str = (new include_functor_impl)#structure !Ocaml_common.Location.input_name str
