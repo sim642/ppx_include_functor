@@ -21,7 +21,7 @@ module M1 = struct
   type t = int
   let x = 5
 
-  include functor F1
+  [%%functor include F1]
 end
 
 let () = assert Int.(equal M1.y 5);;
@@ -70,7 +70,7 @@ module M9 = struct
     include Int
     let z = 7
   end
-  include functor F9
+  [%%functor include F9]
 end
 
 let () = assert (M9.eq_z M9.Foo.z);;
@@ -80,7 +80,7 @@ module M9' = struct
     include Int
     let z = 6
   end
-  include functor F9
+  [%%functor include F9]
 end
 
 let () = assert (not (M9'.eq_z 5))
@@ -91,7 +91,7 @@ let () = assert (M9'.eq_z 6);;
 type t = int
 let x : t = 3
 let x : t = 5
-include functor F1
+[%%functor include F1]
 
 let () = assert (Int.(equal y 5));;
 
@@ -118,5 +118,5 @@ module M12 : sig val y : int list end = struct
     let x = [X.x]
     let z = "something"
   end
-  include functor F
+  [%%functor include F]
 end;;
