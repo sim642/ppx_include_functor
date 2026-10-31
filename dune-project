@@ -1,4 +1,4 @@
-(lang dune 3.24)
+(lang dune 3.0)
 
 (name ppx_include_functor)
 

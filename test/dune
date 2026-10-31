@@ -1,3 +1,6 @@
 (test
  (name test_ppx_include_functor)
  (preprocess (pps ppx_include_functor)))
+
+(env
+ (_ (flags :standard -warn-error -27-32)))

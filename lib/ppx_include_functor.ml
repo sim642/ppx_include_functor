@@ -2,7 +2,7 @@ open Ppxlib
 open Ast_builder.Default
 
 
-class include_functor_impl = object (self)
+class include_functor_impl = object (* (self) *)
   inherit Ast_traverse.map as super
 
   method! structure str =
@@ -18,7 +18,7 @@ class include_functor_impl = object (self)
             include [%m me] (M)
           ]
           |> List.rev
-        | _ -> super#structure_item stri :: acc
+        | _ -> super#structure_item stri :: acc (* TODO: should use self? *)
       ) [] str
     |> List.rev
 end
