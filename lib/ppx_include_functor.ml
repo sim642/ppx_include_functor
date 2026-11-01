@@ -7,8 +7,6 @@ let fresh_name () =
   incr fresh_name_count;
   name
 
-let dup x = (x, x)
-
 class ppat_vars = object
   inherit [label loc list] Ast_traverse.fold as super
 
