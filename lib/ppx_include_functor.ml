@@ -18,7 +18,6 @@ let forward stri =
             {td with ptype_manifest = Some (core_type_of_type_declaration td)}
           ) tds
       )]
-    |> dup
   | Pstr_value (_, vbs) ->
     let vbs' = List.filter_map (fun vb ->
         match vb.pvb_pat.ppat_desc with
@@ -33,21 +32,16 @@ let forward stri =
       | [] -> []
       | _ -> [pstr_value ~loc Nonrecursive vbs']
     end
-    |> dup
   | Pstr_module mb ->
     [pstr_module ~loc {mb with pmb_expr = pmod_ident ~loc (Located.map (function Some s -> Lident s | None -> failwith "TODO") mb.pmb_name)}]
-    |> dup
   | Pstr_modtype mtd ->
     [pstr_modtype ~loc {mtd with pmtd_type = Some (pmty_ident ~loc (Located.map_lident mtd.pmtd_name))}]
-    |> dup
   (* | Pstr_open od -> [pstr_open ~loc {od with popen_override = Override}] (* TODO: drop? *) *)
   | Pstr_open _ -> []
-    |> dup
   (* | Pstr_include id -> [pstr_include ~loc id] *)
-  | Pstr_include id ->
-    ([[%stri module M = [%m id.pincl_mod]]], [[%stri include M]])
+  | Pstr_include _ ->
+    [stri]
   | _ -> [pstr_extension ~loc (Location.error_extensionf ~loc "include_functor: unsupported structure item") []]
-    |> dup
 
 type acc = {
   forwarded: structure;
@@ -66,15 +60,13 @@ class include_functor_impl = object (* (self) *)
           let (forwarded', forwards') =
             List.fold_left (fun (forwarded, forwards) stri ->
                 match forward stri with
-                | [], [] -> (stri :: forwarded, forwards)
-                | _, []
-                | [], _ -> assert false
-                | forward1, forward2 ->
+                | [] -> (stri :: forwarded, forwards)
+                | forward ->
                   let name = fresh_name () in
                   let forward_open =
                     let def = pstr_module ~loc {
                       pmb_name = Located.mk ~loc (Some name);
-                      pmb_expr = pmod_structure ~loc forward1;
+                      pmb_expr = pmod_structure ~loc forward;
                       pmb_attributes = [];
                       pmb_loc = loc}
                     in
@@ -87,9 +79,7 @@ class include_functor_impl = object (* (self) *)
                   let forwarded' = forward_open :: stri :: forwarded in
                   let forward_include =
                     let m = pmod_ident ~loc (Located.lident ~loc name) in
-                    [%stri open [%m m]] :: forward2
-                    (* TODO: is this right and safer? *)
-                    |> fun str -> [%stri include [%m pmod_structure ~loc str]]
+                    [%stri include [%m m]]
                   in
                   let forwards' = forward_include :: forwards in
                   (forwarded', forwards')
