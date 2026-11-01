@@ -51,7 +51,9 @@ let forward stri =
     [stri]
   | Pstr_attribute _ -> [] (* e.g. [@@@ocaml.text "..."] *) (* TODO: fine to ignore? *)
   | Pstr_primitive _ -> [stri] (* TODO: fine to just duplicate? *)
-  | _ -> [pstr_extension ~loc (Location.error_extensionf ~loc "include_functor: unsupported structure item") []]
+  | _ ->
+    [pstr_extension ~loc (Location.error_extensionf ~loc "include_functor: unsupported structure item") []]
+    (* [pstr_attribute ~loc (attribute_of_warning loc "include_functor: unsupported structure item")] *)
 
 type acc = {
   forwarded: structure;
