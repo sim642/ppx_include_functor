@@ -50,9 +50,9 @@ type acc = {
 }
 
 class include_functor_impl = object (* (self) *)
-  inherit Ast_traverse.map_with_path as super
+  inherit Ast_traverse.map as super
 
-  method! structure path str =
+  method! structure str =
     List.fold_left (fun (acc: acc) stri ->
         match stri with
         | [%stri [%%functor include [%m? me]]] ->
@@ -93,13 +93,13 @@ class include_functor_impl = object (* (self) *)
           let unforwarded' = [stri'] in
           {forwarded = forwarded'; unforwarded = unforwarded'; forwards = forwards'}
         | _ ->
-          let stri' = super#structure_item path stri in (* TODO: should use self? *)
+          let stri' = super#structure_item stri in (* TODO: should use self? *)
           {acc with unforwarded = stri' :: acc.unforwarded}
       ) {forwarded = []; unforwarded = []; forwards = []} str
     |> fun {forwarded; unforwarded; _} -> List.rev_append forwarded (List.rev unforwarded)
 end
 
-let impl str = (new include_functor_impl)#structure !Ocaml_common.Location.input_name str
+let impl = (new include_functor_impl)#structure
 
 let () =
   Driver.register_transformation ~impl "include_functor"
