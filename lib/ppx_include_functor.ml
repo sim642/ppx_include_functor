@@ -9,23 +9,33 @@ let fresh_name () =
 
 let dup x = (x, x)
 
+class ppat_vars = object
+  inherit [label loc list] Ast_traverse.fold as super
+
+  method! pattern pat acc =
+    match pat.ppat_desc with
+    | Ppat_var x ->
+      x :: acc
+    | _ -> super#pattern pat acc
+end
+
+let ppat_vars pat = (new ppat_vars)#pattern pat []
+
 let forward stri =
   let loc = stri.pstr_loc in
   match stri.pstr_desc with
   | Pstr_type (_, tds) ->
     [pstr_type ~loc Nonrecursive (
         List.map (fun td ->
-            {td with ptype_manifest = Some (core_type_of_type_declaration td)}
+            {td with ptype_manifest = Some (core_type_of_type_declaration td); ptype_attributes = []}
           ) tds
       )]
   | Pstr_value (_, vbs) ->
-    let vbs' = List.filter_map (fun vb ->
-        match vb.pvb_pat.ppat_desc with
-        | Ppat_var x ->
-          Some {vb with pvb_expr = pexp_ident ~loc (Located.map_lident x)}
-        | Ppat_construct ({txt = Lident "()"; _}, _) ->
-          None
-        | _ -> Location.raise_errorf ~loc "include_functor: unsupported pattern"
+    let vbs' = List.concat_map (fun vb ->
+        ppat_vars vb.pvb_pat
+        |> List.map (fun x ->
+            {vb with pvb_expr = pexp_ident ~loc (Located.map_lident x)}
+          )
       ) vbs
     in
     begin match vbs' with
