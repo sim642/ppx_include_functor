@@ -49,6 +49,7 @@ let forward stri =
   (* | Pstr_include id -> [pstr_include ~loc id] *)
   | Pstr_include _ ->
     [stri]
+  | Pstr_attribute _ -> [] (* e.g. [@@@ocaml.text "..."] *) (* TODO: fine to ignore? *)
   | _ -> [pstr_extension ~loc (Location.error_extensionf ~loc "include_functor: unsupported structure item") []]
 
 type acc = {
